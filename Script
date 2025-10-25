@@ -1,10 +1,16 @@
--- Danttx Hub Anti-Hit Avanzado Todo en Uno
-
+-- Danttx Hub Anti-Hit Final Todo en Uno
 local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local backpack = player:WaitForChild("Backpack")
+
+-- Crear ScreenGui
 local gui = Instance.new("ScreenGui")
 gui.Name = "DanttxHub"
 gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+gui.Parent = playerGui
+gui.Enabled = true
 
 -- Marco principal
 local frame = Instance.new("Frame")
@@ -88,9 +94,9 @@ local function updateButton()
 end
 updateButton()
 
--- Función para crear clon visual
-local function createVisualClone(char)
-	local clone = char:Clone()
+-- Crear clon visual
+local function createVisualClone(character)
+	local clone = character:Clone()
 	for _, part in ipairs(clone:GetDescendants()) do
 		if part:IsA("BasePart") then
 			part.Anchored = true
@@ -100,12 +106,12 @@ local function createVisualClone(char)
 			part:Destroy()
 		end
 	end
-	clone.Name = char.Name.."_VisualClone"
+	clone.Name = character.Name.."_VisualClone"
 	clone.Parent = workspace
 	return clone
 end
 
--- Función Anti-Hit avanzada
+-- Anti-Hit avanzado
 local function activateAntiHit(state)
 	antiOn = state
 	_G.AntiHitActive = state
@@ -135,11 +141,11 @@ local function activateAntiHit(state)
 			task.wait(0.1)
 		until cloneObj and cloneObj:FindFirstChild("HumanoidRootPart")
 
-		-- Crear clon visual para que otros vean
+		-- Crear clon visual
 		local visualClone = createVisualClone(char)
 		visualClone:SetPrimaryPartCFrame(cloneObj.HumanoidRootPart.CFrame)
 
-		-- Mover personaje local fuera de la vista
+		-- Hacer invisible y sin colisión el personaje real
 		for _, part in ipairs(char:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.CanCollide = false
@@ -148,7 +154,7 @@ local function activateAntiHit(state)
 			end
 		end
 
-		-- Teletransportar tu personaje local a clon real (hitbox)
+		-- Teletransportar al clon
 		char:SetPrimaryPartCFrame(cloneObj.HumanoidRootPart.CFrame + Vector3.new(0,3,0))
 
 	else
@@ -161,7 +167,7 @@ local function activateAntiHit(state)
 			end
 		end
 
-		-- Eliminar cualquier clon visual
+		-- Eliminar clones visuales
 		for _, c in ipairs(workspace:GetChildren()) do
 			if c.Name == char.Name.."_VisualClone" then
 				c:Destroy()
@@ -174,7 +180,7 @@ antiBtn.MouseButton1Click:Connect(function()
 	activateAntiHit(not antiOn)
 end)
 
--- Protección Boogie Bomb
+-- Bloqueo Boogie Bomb
 task.spawn(function()
 	while true do
 		local boogie = player:FindFirstChild("BoogieScript", true)
