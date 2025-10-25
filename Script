@@ -1,4 +1,4 @@
---// Danttx Hub Anti-Hit Funcional Todo en Uno
+--// Danttx Hub Anti-Hit Definitivo
 --// Uso personal en tu juego
 
 local player = game.Players.LocalPlayer
@@ -89,57 +89,55 @@ local function updateButton()
 end
 updateButton()
 
--- Función Anti-Hit
+-- Función Anti-Hit avanzada
 local function activateAntiHit(state)
 	antiOn = state
-	_G.AntiHitActive = state -- para Boogie Bomb
+	_G.AntiHitActive = state
 	updateButton()
 
 	local char = player.Character or player.CharacterAdded:Wait()
 	local humanoid = char:WaitForChild("Humanoid")
 	local backpack = player:WaitForChild("Backpack")
 
-	-- Buscar Quantum Cloner y equipar
+	-- Esperar y equipar Quantum Cloner
 	local cloner = backpack:FindFirstChild("Quantum Cloner")
 	if not cloner then
-		-- Esperar a que aparezca en Backpack
 		cloner = backpack.ChildAdded:Wait()
 		while cloner.Name ~= "Quantum Cloner" do
 			cloner = backpack.ChildAdded:Wait()
 		end
 	end
-
 	if state and cloner then
-		-- Equipar herramienta
 		humanoid:EquipTool(cloner)
 		task.wait(0.2)
-
-		-- Activar clon
 		cloner:Activate()
 
-		-- Esperar a que el clon aparezca en Workspace
+		-- Esperar a que aparezca el clon en workspace
 		local clone
 		repeat
 			clone = workspace:FindFirstChild(player.Name.."_Clone") or workspace:FindFirstChild("Clone")
 			task.wait(0.1)
 		until clone and clone:FindFirstChild("HumanoidRootPart")
 
-		-- Teletransportarse al clon
-		char:SetPrimaryPartCFrame(clone.HumanoidRootPart.CFrame + Vector3.new(0,3,0))
-
-		-- Desincronizar hitbox
+		-- Crear desincronización: mover personaje invisible
 		for _, part in ipairs(char:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.CanCollide = false
 				part.Massless = true
+				part.Transparency = 1 -- personaje invisible
 			end
 		end
+
+		-- Teletransportar tu HumanoidRootPart a clon
+		char:SetPrimaryPartCFrame(clone.HumanoidRootPart.CFrame + Vector3.new(0,3,0))
+
 	else
-		-- Restaurar hitbox al desactivar
+		-- Restaurar personaje
 		for _, part in ipairs(char:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.CanCollide = true
 				part.Massless = false
+				part.Transparency = 0
 			end
 		end
 	end
@@ -158,12 +156,12 @@ task.spawn(function()
 			local oldFunc = env.onActivate
 			env.onActivate = function(...)
 				if _G.AntiHitActive then
-					print("🧠 Boogie Bomb bloqueada por Anti-Hit")
+					print("🧠 Boogie Bomb bloqueada")
 					return
 				end
 				if oldFunc then oldFunc(...) end
 			end
 		end
-		task.wait(1)
+		task.wait(0.5)
 	end
 end)
