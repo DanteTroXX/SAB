@@ -1,5 +1,4 @@
---// Danttx Hub Anti-Hit Definitivo
---// Uso personal en tu juego
+-- Danttx Hub Anti-Hit Avanzado Todo en Uno
 
 local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
@@ -89,6 +88,23 @@ local function updateButton()
 end
 updateButton()
 
+-- Función para crear clon visual
+local function createVisualClone(char)
+	local clone = char:Clone()
+	for _, part in ipairs(clone:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.Anchored = true
+			part.CanCollide = true
+			part.Transparency = 0
+		elseif part:IsA("Humanoid") then
+			part:Destroy()
+		end
+	end
+	clone.Name = char.Name.."_VisualClone"
+	clone.Parent = workspace
+	return clone
+end
+
 -- Función Anti-Hit avanzada
 local function activateAntiHit(state)
 	antiOn = state
@@ -99,37 +115,41 @@ local function activateAntiHit(state)
 	local humanoid = char:WaitForChild("Humanoid")
 	local backpack = player:WaitForChild("Backpack")
 
-	-- Esperar y equipar Quantum Cloner
-	local cloner = backpack:FindFirstChild("Quantum Cloner")
-	if not cloner then
-		cloner = backpack.ChildAdded:Wait()
-		while cloner.Name ~= "Quantum Cloner" do
+	if state then
+		-- Equipar Quantum Cloner
+		local cloner = backpack:FindFirstChild("Quantum Cloner")
+		if not cloner then
 			cloner = backpack.ChildAdded:Wait()
+			while cloner.Name ~= "Quantum Cloner" do
+				cloner = backpack.ChildAdded:Wait()
+			end
 		end
-	end
-	if state and cloner then
 		humanoid:EquipTool(cloner)
 		task.wait(0.2)
 		cloner:Activate()
 
-		-- Esperar a que aparezca el clon en workspace
-		local clone
+		-- Esperar clon en workspace
+		local cloneObj
 		repeat
-			clone = workspace:FindFirstChild(player.Name.."_Clone") or workspace:FindFirstChild("Clone")
+			cloneObj = workspace:FindFirstChild(player.Name.."_Clone") or workspace:FindFirstChild("Clone")
 			task.wait(0.1)
-		until clone and clone:FindFirstChild("HumanoidRootPart")
+		until cloneObj and cloneObj:FindFirstChild("HumanoidRootPart")
 
-		-- Crear desincronización: mover personaje invisible
+		-- Crear clon visual para que otros vean
+		local visualClone = createVisualClone(char)
+		visualClone:SetPrimaryPartCFrame(cloneObj.HumanoidRootPart.CFrame)
+
+		-- Mover personaje local fuera de la vista
 		for _, part in ipairs(char:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.CanCollide = false
 				part.Massless = true
-				part.Transparency = 1 -- personaje invisible
+				part.Transparency = 1
 			end
 		end
 
-		-- Teletransportar tu HumanoidRootPart a clon
-		char:SetPrimaryPartCFrame(clone.HumanoidRootPart.CFrame + Vector3.new(0,3,0))
+		-- Teletransportar tu personaje local a clon real (hitbox)
+		char:SetPrimaryPartCFrame(cloneObj.HumanoidRootPart.CFrame + Vector3.new(0,3,0))
 
 	else
 		-- Restaurar personaje
@@ -138,6 +158,13 @@ local function activateAntiHit(state)
 				part.CanCollide = true
 				part.Massless = false
 				part.Transparency = 0
+			end
+		end
+
+		-- Eliminar cualquier clon visual
+		for _, c in ipairs(workspace:GetChildren()) do
+			if c.Name == char.Name.."_VisualClone" then
+				c:Destroy()
 			end
 		end
 	end
