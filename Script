@@ -1,4 +1,4 @@
--- Danttx Hub Anti-Hit Final Todo en Uno
+-- Danttx Hub Anti-Hit Fluido Final
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local char = player.Character or player.CharacterAdded:Wait()
@@ -111,7 +111,7 @@ local function createVisualClone(character)
 	return clone
 end
 
--- Anti-Hit avanzado
+-- Anti-Hit Fluido
 local function activateAntiHit(state)
 	antiOn = state
 	_G.AntiHitActive = state
@@ -145,7 +145,7 @@ local function activateAntiHit(state)
 		local visualClone = createVisualClone(char)
 		visualClone:SetPrimaryPartCFrame(cloneObj.HumanoidRootPart.CFrame)
 
-		-- Hacer invisible y sin colisión el personaje real
+		-- Hacer invisible y sin colisión al personaje real
 		for _, part in ipairs(char:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.CanCollide = false
@@ -154,8 +154,19 @@ local function activateAntiHit(state)
 			end
 		end
 
-		-- Teletransportar al clon
+		-- Teletransportar al clon real
 		char:SetPrimaryPartCFrame(cloneObj.HumanoidRootPart.CFrame + Vector3.new(0,3,0))
+
+		-- Seguir clon visual automáticamente
+		task.spawn(function()
+			while antiOn and visualClone.Parent do
+				if cloneObj and cloneObj:FindFirstChild("HumanoidRootPart") then
+					visualClone:SetPrimaryPartCFrame(cloneObj.HumanoidRootPart.CFrame)
+				end
+				task.wait(0.03)
+			end
+			if visualClone.Parent then visualClone:Destroy() end
+		end)
 
 	else
 		-- Restaurar personaje
@@ -166,7 +177,6 @@ local function activateAntiHit(state)
 				part.Transparency = 0
 			end
 		end
-
 		-- Eliminar clones visuales
 		for _, c in ipairs(workspace:GetChildren()) do
 			if c.Name == char.Name.."_VisualClone" then
