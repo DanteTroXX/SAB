@@ -1,110 +1,163 @@
---// Danttx Hub v2
---// Moderno, movible y con Anti-Hit toggle visual
---// Colores: Verde (activo) / Rojo (inactivo)
+--// Danttx Hub Todo en Uno
+--// Hecho para uso personal en tu juego
+--// Funciones: Anti-Hit + protección Boogie Bomb + UI
 
 local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
-local gui = script.Parent
-local frame = gui:WaitForChild("Frame")
+local gui = Instance.new("ScreenGui")
+gui.Name = "DanttxHub"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
--- Diseño general
+-- Marco principal
+local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 250, 0, 150)
 frame.Position = UDim2.new(0.5, -125, 0.5, -75)
 frame.BackgroundTransparency = 0.3
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BorderSizePixel = 0
 frame.Active = true
-frame.Draggable = true -- Movible en PC y móvil
-frame.Visible = true
+frame.Draggable = true
+frame.Parent = gui
+Instance.new("UICorner", frame)
 
 -- Título
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 30)
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
 title.Text = "Danttx Hub"
 title.TextColor3 = Color3.fromRGB(255,255,255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
+title.Parent = frame
 
 -- Botón Anti-Hit
-local antiHitBtn = Instance.new("TextButton", frame)
-antiHitBtn.Size = UDim2.new(0.8, 0, 0, 40)
-antiHitBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
-antiHitBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0) -- Rojo inactivo
-antiHitBtn.Text = "🧠 Anti-Hit (OFF)"
-antiHitBtn.TextColor3 = Color3.fromRGB(255,255,255)
-antiHitBtn.Font = Enum.Font.Gotham
-antiHitBtn.TextScaled = true
-antiHitBtn.AutoButtonColor = true
-Instance.new("UICorner", antiHitBtn)
+local antiBtn = Instance.new("TextButton")
+antiBtn.Size = UDim2.new(0.8, 0, 0, 40)
+antiBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
+antiBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+antiBtn.Text = "🧠 Anti-Hit (OFF)"
+antiBtn.TextColor3 = Color3.fromRGB(255,255,255)
+antiBtn.TextScaled = true
+antiBtn.Font = Enum.Font.Gotham
+antiBtn.AutoButtonColor = true
+Instance.new("UICorner", antiBtn)
+antiBtn.Parent = frame
 
 -- Botón Cerrar
-local closeBtn = Instance.new("TextButton", frame)
-closeBtn.Size = UDim2.new(0.8, 0, 0, 40)
-closeBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0.8,0,0,40)
+closeBtn.Position = UDim2.new(0.1,0,0.65,0)
 closeBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
 closeBtn.Text = "❌ Cerrar"
 closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-closeBtn.Font = Enum.Font.Gotham
 closeBtn.TextScaled = true
-closeBtn.AutoButtonColor = true
+closeBtn.Font = Enum.Font.Gotham
 Instance.new("UICorner", closeBtn)
+closeBtn.Parent = frame
 
--- Botón Abrir (cuando esté minimizado)
-local minimized = false
-local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.new(0, 100, 0, 40)
-openBtn.Position = UDim2.new(0, 20, 0, 20)
+-- Botón Abrir
+local openBtn = Instance.new("TextButton")
+openBtn.Size = UDim2.new(0,100,0,40)
+openBtn.Position = UDim2.new(0,20,0,20)
 openBtn.BackgroundTransparency = 0.3
 openBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
 openBtn.Text = "📂 Abrir Hub"
 openBtn.TextColor3 = Color3.fromRGB(255,255,255)
-openBtn.Font = Enum.Font.Gotham
 openBtn.TextScaled = true
-openBtn.Visible = false
+openBtn.Font = Enum.Font.Gotham
 Instance.new("UICorner", openBtn)
+openBtn.Parent = gui
+openBtn.Visible = false
 
 closeBtn.MouseButton1Click:Connect(function()
 	frame.Visible = false
 	openBtn.Visible = true
 end)
-
 openBtn.MouseButton1Click:Connect(function()
 	frame.Visible = true
 	openBtn.Visible = false
 end)
 
--- Evento remoto
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local remote = ReplicatedStorage:FindFirstChild("ActivateAntiHit") or Instance.new("RemoteEvent")
-remote.Name = "ActivateAntiHit"
-remote.Parent = ReplicatedStorage
+-- Estado Anti-Hit
+local antiOn = false
 
--- Estado del Anti-Hit
-local antiHitActive = false
-
--- Función para actualizar la apariencia
-local function updateAntiHitButton()
-	if antiHitActive then
-		antiHitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0) -- Verde
-		antiHitBtn.Text = "🧠 Anti-Hit (ON)"
+local function updateButton()
+	if antiOn then
+		antiBtn.BackgroundColor3 = Color3.fromRGB(0,180,0)
+		antiBtn.Text = "🧠 Anti-Hit (ON)"
 	else
-		antiHitBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0) -- Rojo
-		antiHitBtn.Text = "🧠 Anti-Hit (OFF)"
+		antiBtn.BackgroundColor3 = Color3.fromRGB(180,0,0)
+		antiBtn.Text = "🧠 Anti-Hit (OFF)"
+	end
+end
+updateButton()
+
+-- Función de Anti-Hit
+local function activateAntiHit(state)
+	antiOn = state
+	updateButton()
+	_G.AntiHitActive = state -- global para BoogieScript
+
+	local char = player.Character or player.CharacterAdded:Wait()
+
+	if state then
+		-- Buscar Quantum Cloner y activar
+		local backpack = player:FindFirstChildOfClass("Backpack")
+		local cloner = backpack and backpack:FindFirstChild("Quantum Cloner")
+		if cloner then
+			cloner:Activate()
+			task.wait(0.3)
+		end
+
+		-- Teletransportarse al clon
+		local clone = workspace:FindFirstChild(player.Name.."_Clone") or workspace:FindFirstChild("Clone")
+		if clone and clone:FindFirstChild("HumanoidRootPart") then
+			char:MoveTo(clone.HumanoidRootPart.Position + Vector3.new(0,3,0))
+		end
+
+		-- Desincronizar hitbox
+		for _, part in ipairs(char:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+				part.Massless = true
+			end
+		end
+	else
+		-- Restaurar hitbox normal
+		for _, part in ipairs(char:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = true
+				part.Massless = false
+			end
+		end
 	end
 end
 
--- Click para activar/desactivar
-antiHitBtn.MouseButton1Click:Connect(function()
-	antiHitActive = not antiHitActive
-	updateAntiHitButton()
-
-	if antiHitActive then
-		remote:FireServer(true)
-	else
-		remote:FireServer(false)
-	end
+antiBtn.MouseButton1Click:Connect(function()
+	activateAntiHit(not antiOn)
 end)
 
--- Inicializar color
-updateAntiHitButton()
+-- Protección Boogie Bomb
+-- Sobreescribir función del script BoogieScript si existe
+local function protectBoogie()
+	local boogie = player:FindFirstChild("BoogieScript", true)
+	if boogie and boogie:IsA("Script") then
+		-- interceptar la función principal del script
+		local env = getfenv(boogie)
+		local oldFunc = env.onActivate
+		env.onActivate = function(...)
+			if _G.AntiHitActive then
+				print("🧠 Boogie Bomb bloqueada por Anti-Hit")
+				return
+			end
+			if oldFunc then oldFunc(...) end
+		end
+	end
+end
+
+-- Llamar protección periódicamente
+task.spawn(function()
+	while true do
+		protectBoogie()
+		task.wait(1)
+	end
+end)
