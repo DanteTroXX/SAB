@@ -1,6 +1,6 @@
---// Danttx Hub Todo en Uno
---// Hecho para uso personal en tu juego
---// Funciones: Anti-Hit + protección Boogie Bomb + UI
+--// Danttx Hub Anti-Hit completo
+--// Hecho para tu juego
+--// Teleporta al clon, desincroniza y bloquea Boogie Bomb
 
 local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
@@ -31,9 +31,9 @@ title.Parent = frame
 
 -- Botón Anti-Hit
 local antiBtn = Instance.new("TextButton")
-antiBtn.Size = UDim2.new(0.8, 0, 0, 40)
-antiBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
-antiBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+antiBtn.Size = UDim2.new(0.8,0,0,40)
+antiBtn.Position = UDim2.new(0.1,0,0.3,0)
+antiBtn.BackgroundColor3 = Color3.fromRGB(180,0,0)
 antiBtn.Text = "🧠 Anti-Hit (OFF)"
 antiBtn.TextColor3 = Color3.fromRGB(255,255,255)
 antiBtn.TextScaled = true
@@ -79,7 +79,6 @@ end)
 
 -- Estado Anti-Hit
 local antiOn = false
-
 local function updateButton()
 	if antiOn then
 		antiBtn.BackgroundColor3 = Color3.fromRGB(0,180,0)
@@ -91,26 +90,29 @@ local function updateButton()
 end
 updateButton()
 
--- Función de Anti-Hit
+-- Función Anti-Hit completa
 local function activateAntiHit(state)
 	antiOn = state
+	_G.AntiHitActive = state -- para Boogie Bomb
 	updateButton()
-	_G.AntiHitActive = state -- global para BoogieScript
 
 	local char = player.Character or player.CharacterAdded:Wait()
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	local cloner = backpack and backpack:FindFirstChild("Quantum Cloner")
 
-	if state then
-		-- Buscar Quantum Cloner y activar
-		local backpack = player:FindFirstChildOfClass("Backpack")
-		local cloner = backpack and backpack:FindFirstChild("Quantum Cloner")
-		if cloner then
-			cloner:Activate()
-			task.wait(0.3)
-		end
+	if state and cloner then
+		-- Equipar Cloner
+		player.Character.Humanoid:EquipTool(cloner)
+		task.wait(0.2)
 
-		-- Teletransportarse al clon
+		-- Activar clon
+		cloner:Activate()
+		task.wait(0.3)
+
+		-- Buscar clon en workspace
 		local clone = workspace:FindFirstChild(player.Name.."_Clone") or workspace:FindFirstChild("Clone")
 		if clone and clone:FindFirstChild("HumanoidRootPart") then
+			-- Teletransportarse
 			char:MoveTo(clone.HumanoidRootPart.Position + Vector3.new(0,3,0))
 		end
 
@@ -122,7 +124,7 @@ local function activateAntiHit(state)
 			end
 		end
 	else
-		-- Restaurar hitbox normal
+		-- Restaurar hitbox al desactivar
 		for _, part in ipairs(char:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.CanCollide = true
@@ -137,11 +139,9 @@ antiBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Protección Boogie Bomb
--- Sobreescribir función del script BoogieScript si existe
 local function protectBoogie()
 	local boogie = player:FindFirstChild("BoogieScript", true)
 	if boogie and boogie:IsA("Script") then
-		-- interceptar la función principal del script
 		local env = getfenv(boogie)
 		local oldFunc = env.onActivate
 		env.onActivate = function(...)
@@ -154,7 +154,7 @@ local function protectBoogie()
 	end
 end
 
--- Llamar protección periódicamente
+-- Revisar BoogieScript periódicamente
 task.spawn(function()
 	while true do
 		protectBoogie()
